@@ -1,6 +1,8 @@
 import heapq, random, math, time
+from heapq import heappop
 from math import pi, acos, sin, cos
 from tkinter import *
+
 
 def calc_edge_cost(y1, x1, y2, x2):
    #
@@ -11,29 +13,29 @@ def calc_edge_cost(y1, x1, y2, x2):
    # if (and only if) the input is strings
    # use the following conversions
 
-   y1  = float(y1)
-   x1  = float(x1)
-   y2  = float(y2)
-   x2  = float(x2)
+   y1 = float(y1)
+   x1 = float(x1)
+   y2 = float(y2)
+   x2 = float(x2)
    #
-   R   = 3958.76 # miles = 6371 km
+   R = 3958.76  # miles = 6371 km
    #
-   y1 *= pi/180.0
-   x1 *= pi/180.0
-   y2 *= pi/180.0
-   x2 *= pi/180.0
+   y1 *= pi / 180.0
+   x1 *= pi / 180.0
+   y2 *= pi / 180.0
+   x2 *= pi / 180.0
    #
    # approximate great circle distance with law of cosines
    #
-   return acos( sin(y1)*sin(y2) + cos(y1)*cos(y2)*cos(x2-x1) ) * R
+   return acos(sin(y1) * sin(y2) + cos(y1) * cos(y2) * cos(x2 - x1)) * R
    #
 
 
 # NodeLocations, NodeToCity, CityToNode, Neighbors, EdgeCost
 # Node: (lat, long) or (y, x), node: city, city: node, node: neighbors, (n1, n2): cost
-def make_graph(nodes = "rrNodes.txt", node_city = "rrNodeCity.txt", edges = "rrEdges.txt"):
+def make_graph(nodes="rrNodes.txt", node_city="rrNodeCity.txt", edges="rrEdges.txt"):
    nodeLoc, nodeToCity, cityToNode, neighbors, edgeCost = {}, {}, {}, {}, {}
-   map = {}   # have screen coordinate for each node location
+   map = {}  # have screen coordinate for each node location
 
    for line in open(nodes, 'r').read().splitlines():
       node, y, x = line.split()
@@ -55,28 +57,30 @@ def make_graph(nodes = "rrNodes.txt", node_city = "rrNodeCity.txt", edges = "rrE
       edgeCost[(node, child)] = calc_edge_cost(y1, x1, y2, x2)
       edgeCost[(child, node)] = calc_edge_cost(y2, x2, y1, x1)
 
-   #Un-comment after you fill the nodeLoc dictionary.
-   for node in nodeLoc: #checks each
-      lat = float(nodeLoc[node][0]) #gets latitude
-      long = float(nodeLoc[node][1]) #gets long
-      modlat = (lat - 10)/60 #scales to 0-1
-      modlong = (long+130)/70 #scales to 0-1
-      map[node] = [modlat*800, modlong*1200] #scales to fit 800 1200
+   # Un-comment after you fill the nodeLoc dictionary.
+   for node in nodeLoc:  # checks each
+      lat = float(nodeLoc[node][0])  # gets latitude
+      long = float(nodeLoc[node][1])  # gets long
+      modlat = (lat - 10) / 60  # scales to 0-1
+      modlong = (long + 130) / 70  # scales to 0-1
+      map[node] = [modlat * 800, modlong * 1200]  # scales to fit 800 1200
    return [nodeLoc, nodeToCity, cityToNode, neighbors, edgeCost, map]
+
+
 # Return the direct distance from node1 to node2
 # Use calc_edge_cost function.
 def dist_heuristic(n1, n2, graph):
-   
    # Your code goes here
    y1, x1 = graph[0][n1]
    y2, x2 = graph[0][n2]
    return calc_edge_cost(y1, x1, y2, x2)
-   #pass
-# Create a city path. 
+   # pass
+
+
+# Create a city path.
 # Visit each node in the path. If the node has the city name, add the city name to the path.
 # Example: ['Charlotte', 'Hermosillo', 'Mexicali', 'Los Angeles']
 def display_path(path, graph):
-   
    # Your code goes here
    retPath = []
    for id in path:
@@ -85,84 +89,112 @@ def display_path(path, graph):
       else:
          retPath.append(id)
    return retPath
-   #pass
+   # pass
+
 
 def drawLine(canvas, y1, x1, y2, x2, col):
-   x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)   
-   canvas.create_line(x1, 800-y1, x2, 800-y2, fill=col)
+   x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)
+   canvas.create_line(x1, 800 - y1, x2, 800 - y2, fill=col)
+
 
 # Draw the final shortest path.
 # Use drawLine function.
 def draw_final_path(ROOT, canvas, path, graph, col='red'):
-   
    # Your code goes here
-   for i in range(len(path)-1):
-      y1, x1 = graph[5][path[i]]
-      y2, x2 = graph[5][path[i+1]]
+   for i in range(len(path) - 1):
+      y1, x1 = graph[5][path[i][0]]
+      y2, x2 = graph[5][path[i + 1][0]]
       drawLine(canvas, y1, x1, y2, x2, col)
-   #ROOT.update()
-   #pass
+   # ROOT.update()
+   # pass
+
 
 def draw_all_edges(ROOT, canvas, graph):
-   ROOT.geometry("1200x800") #sets geometry
-   canvas.pack(fill=BOTH, expand=1) #sets fill expand
-   for n1, n2 in graph[4]:  #graph[4] keys are edge set
-      drawLine(canvas, *graph[5][n1], *graph[5][n2], 'black') #graph[5] is map dict
+   ROOT.geometry("1200x800")  # sets geometry
+   canvas.pack(fill=BOTH, expand=1)  # sets fill expand
+   for n1, n2 in graph[4]:  # graph[4] keys are edge set
+      drawLine(canvas, *graph[5][n1], *graph[5][n2], 'black')  # graph[5] is map dict
    ROOT.update()
-def a_star(start, goal, graph):
 
+
+def a_star(start, goal, graph):
    # Your code goes here
    ROOT = Tk()
    ROOT.title("aStar")
-   canvas = Canvas(ROOT, background = 'white')
+   canvas = Canvas(ROOT, background='white')
    draw_all_edges(ROOT, canvas, graph)
 
-   if start==goal:
+   if start == goal:
       return start, 0
-   openSet = [(dist_heuristic(start, goal, graph), 0, [start], start)]
+   openSet = [(dist_heuristic(start, goal, graph), 0, [(start, 0)], start)]
    closedSet = {}
    while True:
       openSet.sort()
       f, distanceTo, path, location = openSet.pop(0)
 
-      #draw_final_path(ROOT, canvas, path, graph, 'green')
+      # draw_final_path(ROOT, canvas, path, graph, 'green')
       if location in closedSet:
          continue
       closedSet[location] = distanceTo
       for nbr in graph[3][location]:
-         if nbr==goal:
-            for f, distanceTo, path, location in openSet:
-               draw_final_path(ROOT, canvas, path, graph, 'green')
-            #print(parentSet)
-            totalDist = distanceTo + calc_edge_cost(graph[0][nbr][0], graph[0][nbr][1], graph[0][location][0], graph[0][location][1])
-            #find path
-            path.append(nbr)
+         parToChild = calc_edge_cost(graph[0][nbr][0], graph[0][nbr][1], graph[0][location][0], graph[0][location][1])
+         if nbr == goal:
+            #for f, distanceTo, path, location in openSet:
+            #   draw_final_path(ROOT, canvas, path, graph, 'green')
+            # print(parentSet)
+            totalDist = distanceTo + calc_edge_cost(graph[0][nbr][0], graph[0][nbr][1], graph[0][location][0],
+                                                    graph[0][location][1])
+            # find path
+            path.append((nbr, parToChild))
             draw_final_path(ROOT, canvas, path, graph)
             ROOT.update()
             return path, totalDist
-         #dToEnd = calc_edge_cost(graph[0][goal][0], graph[0][goal][1], graph[0][nbr][0], graph[0][nbr][1])
+         # dToEnd = calc_edge_cost(graph[0][goal][0], graph[0][goal][1], graph[0][nbr][0], graph[0][nbr][1])
          dToEnd = dist_heuristic(goal, nbr, graph)
-         parToChild = calc_edge_cost(graph[0][nbr][0], graph[0][nbr][1], graph[0][location][0], graph[0][location][1])
+
          newF = dToEnd + parToChild + distanceTo
-         openSet.append((newF, distanceTo+parToChild, path+[nbr], nbr))
+         openSet.append((newF, distanceTo + parToChild, path + [(nbr, parToChild)], nbr))
          drawLine(canvas, graph[5][location][0], graph[5][location][1], graph[5][nbr][0], graph[5][nbr][1], 'blue')
          #ROOT.update()#comment out to draw closedSet at end
    return None
 
+
 def main():
-   #find start, goal
+   # find start, goal
    graph = make_graph("rrNodes.txt", "rrNodeCity.txt", "rrEdges.txt")
 
    cur_time = time.time()
-   path, cost = a_star(graph[2][sys.argv[1]], graph[2][sys.argv[2]], graph)
-   if path != None: display_path(path, graph)
-   else: print ("No Path Found.")
-   print ('length: ', cost)
-   print ('duration: ', (time.time() - cur_time))
-   print ()
-   mainloop() # Let TK windows stay still
-main()
+   start = ''
+   end = ''
+   args = sys.argv[1:]
+   for loc in args:
+      if start not in graph[2]:
+         if start!='':
+            start+=' '
+         start+=loc
+         continue
+      if end not in graph[2]:
+         if end!='':
+            end+= ' '
+         end+=loc
+   path, cost = a_star(graph[2][start], graph[2][end], graph)
+   if path != None:
+      display_path(path, graph)
+   else:
+      print("No Path Found.")
+   for node in path:
+      if node[0] in graph[1]:
+         print(str(graph[1][node[0]]) + '     ' + str(node[1]) + ' miles')
+      else:
+         print(str(node[0]) + '     ' + str(node[1]) + ' miles')
+   print('Total nodes: ' + str(len(path)))
+   print('Total Distance: ', cost,  ' miles')
+   print('duration: ', (time.time() - cur_time))
+   print()
+   mainloop()  # Let TK windows stay still
 
+
+main()
 
 ''' Sample output
 The number of explored nodes of A star: 7692
