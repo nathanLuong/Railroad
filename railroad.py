@@ -27,7 +27,10 @@ def calc_edge_cost(y1, x1, y2, x2):
    #
    # approximate great circle distance with law of cosines
    #
-   return acos(sin(y1) * sin(y2) + cos(y1) * cos(y2) * cos(x2 - x1)) * R
+   try:
+      return acos(sin(y1) * sin(y2) + cos(y1) * cos(y2) * cos(x2 - x1)) * R
+   except:
+      return 0
    #
 
 
@@ -123,22 +126,32 @@ def a_star(start, goal, graph):
    ROOT.title("aStar")
    canvas = Canvas(ROOT, background='white')
    draw_all_edges(ROOT, canvas, graph)
-
+   startTime = time.time()
    if start == goal:
       return start, 0
-   openSet = [(dist_heuristic(start, goal, graph), 0, [(start, 0)], start)]
+   openSet = [(dist_heuristic(start, goal, graph), start, 0, [(start, 0)], start)]
    closedSet = {}
-   while True:
+   counter = 1
+   while openSet:
+      counter+=1
+      ROOT.update()
       openSet.sort()
-      f, distanceTo, path, location = openSet.pop(0)
-
-      # draw_final_path(ROOT, canvas, path, graph, 'green')
+      f, parent, distanceTo, path, location = openSet.pop(0)
       if location in closedSet:
+         drawLine(canvas, graph[5][location][0], graph[5][location][1], graph[5][parent][0], graph[5][parent][1],'blue')
          continue
       closedSet[location] = distanceTo
+      drawLine(canvas, graph[5][location][0], graph[5][location][1], graph[5][parent][0], graph[5][parent][1], 'blue')
+      if location==goal:
+         #for est, par, pathlen, nodes, location in openSet:
+         #   draw_final_path(ROOT, canvas, nodes, graph, 'green')
+         totalDist = distanceTo
+         draw_final_path(ROOT, canvas, path, graph)
+         ROOT.update()
+         return path, totalDist
       for nbr in graph[3][location]:
          parToChild = calc_edge_cost(graph[0][nbr][0], graph[0][nbr][1], graph[0][location][0], graph[0][location][1])
-         if nbr == goal:
+         '''if nbr == goal:
             #for f, distanceTo, path, location in openSet:
             #   draw_final_path(ROOT, canvas, path, graph, 'green')
             # print(parentSet)
@@ -148,16 +161,16 @@ def a_star(start, goal, graph):
             path.append((nbr, parToChild))
             draw_final_path(ROOT, canvas, path, graph)
             ROOT.update()
-            return path, totalDist
+            return path, totalDist'''
          # dToEnd = calc_edge_cost(graph[0][goal][0], graph[0][goal][1], graph[0][nbr][0], graph[0][nbr][1])
          dToEnd = dist_heuristic(goal, nbr, graph)
 
          newF = dToEnd + parToChild + distanceTo
-         openSet.append((newF, distanceTo + parToChild, path + [(nbr, parToChild)], nbr))
-         drawLine(canvas, graph[5][location][0], graph[5][location][1], graph[5][nbr][0], graph[5][nbr][1], 'blue')
+         openSet.append((newF, location, distanceTo + parToChild, path + [(nbr, parToChild)], nbr))
+
+         drawLine(canvas, graph[5][location][0], graph[5][location][1], graph[5][nbr][0], graph[5][nbr][1], 'green')
          #ROOT.update()#comment out to draw closedSet at end
    return None
-
 
 def main():
    # find start, goal
@@ -187,9 +200,9 @@ def main():
          print(str(graph[1][node[0]]) + '     ' + str(node[1]) + ' miles')
       else:
          print(str(node[0]) + '     ' + str(node[1]) + ' miles')
-   print('Total nodes: ' + str(len(path)))
+   print('Total stations: ' + str(len(path)-1))
    print('Total Distance: ', cost,  ' miles')
-   print('duration: ', (time.time() - cur_time))
+   #print('duration: ', (time.time() - cur_time))
    print()
    mainloop()  # Let TK windows stay still
 
